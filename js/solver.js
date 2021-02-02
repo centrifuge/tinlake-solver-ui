@@ -35,7 +35,6 @@ const linearExpression = (coefs) => {
     return str
 }
 
-
 const calculateOptimalSolution = (state, orders, weights) => {
     return require('clp-wasm/clp-wasm.all').then((clp) => {
         const e27 = new BN(1).mul(new BN(10).pow(new BN(27)))
@@ -290,6 +289,17 @@ async function solveProblem(testCase) {
     const orders = paramsToBn(testCase.orders);
     const res = await calculateOptimalSolution(state, orders, testCase.weights);
 
+    const seniorAssetEp1 = state.seniorAsset.add(res.dropInvest).sub(res.dropRedeem);
+    const reserveEp1 = state.reserve.add(res.tinInvest).add(res.dropInvest).sub(res.tinRedeem).sub(res.dropRedeem);
+    const scale = 10000000;
+    const dropRatioEp1Scaled = seniorAssetEp1.mul(new BN(scale)).div(state.netAssetValue.add(reserveEp1));
+    const dropRatioEp1 = parseFloat(dropRatioEp1Scaled) / scale;
+    const tinRatioEp1 = 1 - dropRatioEp1;
+    console.log(dropRatioEp1)
+
+    $('#newTinRatio').text(tinRatioEp1.toString())
+    $('#newReserve').text(reserveEp1.toString())
+
     const isFeasible = res.isFeasible;
     $("#ordersRow").css(
         "background-color",
@@ -408,6 +418,7 @@ function setUpUi(testCase) {
 
 $(() => {
     loadTestCase();
+    setTimeout(buildProblem, 100)
     $('#import-btn').click(() => importTestCase());
     $('#export-btn').click(() => exportTestCase());
 });
