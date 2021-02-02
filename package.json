@@ -1,0 +1,35 @@
+{
+  "name": "tinlake-solver-ui",
+  "version": "1.0.0",
+  "description": "A UI playground for Tinlake Solver",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "start": "webpack --watch",
+    "build": "webpack",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "webpack serve --mode development"
+  },
+  "author": "Centrifuge",
+  "license": "ISC",
+  "dependencies": {
+    "bn.js": "^5.1.3",
+    "bootstrap": "^4.6.0",
+    "clp-wasm": "0.0.14",
+    "popper.js": "^1.16.1",
+    "webpack-jquery-ui": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/webpack": "^4.41.26",
+    "copy-webpack-plugin": "^7.0.0",
+    "css-loader": "^5.0.1",
+    "file-loader": "^6.2.0",
+    "html-webpack-plugin": "^4.5.1",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.20.0",
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}

@@ -1,0 +1,71 @@
+html,
+body {
+  height: 100vh;
+}
+textarea {
+  width: 100%;
+  font-family: "Courier New", Courier, monospace;
+  font-size: small;
+}
+.slider {
+  -webkit-appearance: none; /* Override default CSS styles */
+  appearance: none;
+  width: 100%; /* Full-width */
+  height: 25px; /* Specified height */
+  background: #d3d3d3; /* Grey background */
+  outline: none; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: 0.2s; /* 0.2 seconds transition on hover */
+  transition: opacity 0.2s;
+}
+
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+.nopadding {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+input {
+  text-align: right;
+}
+.w-49 {
+  width: 49%;
+}
+
+.value {
+  width: 68px;
+}
+.exp {
+  width: 45px;
+}
+.add {
+  width: 45px;
+}
+.infeasible {
+  background-color: rgb(197, 116, 116);
+}
+
+h6 {
+  color: lightslategray;
+}
+
+.ui-slider .ui-slider-handle {
+  border: 1px solid black;
+  padding: 0px 4px !important;
+  width: 10px;
+}
+
+.out-slider {
+  border-color: transparent !important;
+}
+
+.out-slider .ui-slider-handle {
+  border: 1px solid green !important;
+  background-color: green;
+  opacity: 1 !important;
+}
+.bb {
+  border-bottom: 1px solid lightgray;
+}
