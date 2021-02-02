@@ -295,8 +295,6 @@ async function solveProblem(testCase) {
     const dropRatioEp1Scaled = seniorAssetEp1.mul(new BN(scale)).div(state.netAssetValue.add(reserveEp1));
     const dropRatioEp1 = parseFloat(dropRatioEp1Scaled) / scale;
     const tinRatioEp1 = 1 - dropRatioEp1;
-    console.log(dropRatioEp1)
-
     $('#newTinRatio').text(tinRatioEp1.toString())
     $('#newReserve').text(reserveEp1.toString())
 
