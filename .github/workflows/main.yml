@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build WASM
+      - name: Build Web Page
         run: npm run build
 
       - name: Deploy 🚀
@@ -29,6 +29,6 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: example
+          FOLDER: dist
           CLEAN: true
 
