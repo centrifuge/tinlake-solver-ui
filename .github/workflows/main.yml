@@ -1,10 +1,5 @@
-# This is a basic workflow to help you get started with Actions
-
-name: Builds and publish CLP solver
-
-# Controls when the action will run. 
+name: Builds and publish Tinlake Solver UI
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: 
      - main
