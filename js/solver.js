@@ -91,11 +91,11 @@ End
             }
             return res
         }
-        const debugConstraints = `
-reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
-maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
-minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
-maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
+//         const debugConstraints = `
+// reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
+// maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
+// minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
+// maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
         // console.log(debugConstraints)
 
         const isFeasible = output.infeasibilityRay.length == 0 && output.integerSolution
@@ -295,9 +295,14 @@ async function solveProblem(testCase) {
     const dropRatioEp1Scaled = seniorAssetEp1.mul(new BN(scale)).div(state.netAssetValue.add(reserveEp1));
     const dropRatioEp1 = parseFloat(dropRatioEp1Scaled) / scale;
     const tinRatioEp1 = 1 - dropRatioEp1;
-    $('#newTinRatio').text(tinRatioEp1.toString())
-    $('#newReserve').text(reserveEp1.toString())
 
+    const friendlyNum = (bn) => {
+        const str = bn.toString();
+        return `${str}   (${str.length} digits)`;
+    };
+    $('#newTinRatio').text(tinRatioEp1.toString())
+    $('#newReserve').text(friendlyNum(reserveEp1))
+    $('#newSeniorAsset').text(friendlyNum(seniorAssetEp1))
     const isFeasible = res.isFeasible;
     $("#ordersRow").css(
         "background-color",
@@ -308,9 +313,14 @@ async function solveProblem(testCase) {
         const base = testCase.orders[order].base;
         const f = res[order];
         const exp = new BN(10).pow(new BN(base));
-
         const v = f.gt(exp) ? f.div(exp) : 0;
         $(`#${order}SliderOut`).slider("values", 0, v.toString());
+
+        const fulfilled = f.eq(orders[order]);
+        $(`#${order}FulfillStatus`).text((fulfilled ? "ALL" : "PARTIAL"))
+            .css('color', fulfilled ? 'green' : 'red')
+            .css('font-weight', 'bold');
+
     }
 }
 

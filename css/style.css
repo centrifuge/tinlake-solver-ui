@@ -69,3 +69,7 @@ h6 {
 .bb {
   border-bottom: 1px solid lightgray;
 }
+
+.text-bold {
+  font-weight: 600;
+}

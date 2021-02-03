@@ -105,13 +105,29 @@
             max="1"
           />
         </div>
-        <div class="col-3">
+        <div class="col-2">
           <i>TIN Ratio<sub>e+1</sub></i> =
-          <span id="newTinRatio"></span>
+          <span class="text-bold" id="newTinRatio"></span>
         </div>
-        <div class="col-3">
-          <i>Reserve<sub>e+1</sub></i> =
-          <span class="text-bold" id="newReserve"></span>
+        <div class="col-4">
+          <table>
+            <tr>
+              <td class="text-right">
+                <i>Reserve<sub>e+1</sub></i>
+              </td>
+              <td class="">
+                <span class="text-bold ml-2" id="newReserve"></span>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-right">
+                <i>Senior Asset<sub>e+1</sub></i>
+              </td>
+              <td class="">
+                <span class="text-bold ml-2" id="newSeniorAsset"></span>
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
 
@@ -129,10 +145,11 @@
                 <div id="tinInvestSlider" class="mt-1 mb-2 w-100"></div>
                 <div id="tinInvestSliderOut" class="my-1 w-100"></div>
               </td>
-              <td class="w-50">
+              <td class="w-50 pl-2">
                 <input class="value" type="number" id="tinInvestValue" /> E
                 <input class="exp" type="number" id="tinInvestExp" /> +
                 <input class="add" type="number" id="tinInvestAdd" />
+                <span class="ml-3" id="tinInvestFulfillStatus"></span>
               </td>
             </tr>
           </table>
@@ -141,14 +158,15 @@
           <p class="text-center">DROP Invest</p>
           <table class="w-100">
             <tr>
-              <td class="w-49">
+              <td class="w-50">
                 <div id="dropInvestSlider" class="mt-1 mb-2 w-100"></div>
                 <div id="dropInvestSliderOut" class="my-1 w-100"></div>
               </td>
-              <td class="w-49">
+              <td class="w-50 pl-2">
                 <input class="value" type="number" id="dropInvestValue" /> E
                 <input class="exp" type="number" id="dropInvestExp" /> +
                 <input class="add" type="number" id="dropInvestAdd" />
+                <span class="ml-3" id="dropInvestFulfillStatus"></span>
               </td>
             </tr>
           </table>
@@ -161,10 +179,11 @@
                 <div id="tinRedeemSlider" class="mt-1 mb-2 w-100"></div>
                 <div id="tinRedeemSliderOut" class="my-1 w-100"></div>
               </td>
-              <td class="w-50">
+              <td class="w-50 pl-2">
                 <input class="value" type="number" id="tinRedeemValue" /> E
                 <input class="exp" type="number" id="tinRedeemExp" /> +
                 <input class="add" type="number" id="tinRedeemAdd" />
+                <span class="ml-3" id="tinRedeemFulfillStatus"></span>
               </td>
             </tr>
           </table>
@@ -173,14 +192,15 @@
           <p class="text-center">DROP Redeem</p>
           <table class="w-100">
             <tr>
-              <td class="w-49">
+              <td class="w-50">
                 <div id="dropRedeemSlider" class="mt-1 mb-2 w-100"></div>
                 <div id="dropRedeemSliderOut" class="my-1 w-100"></div>
               </td>
-              <td class="w-49">
+              <td class="w-50 pl-2">
                 <input class="value" type="number" id="dropRedeemValue" /> E
                 <input class="exp" type="number" id="dropRedeemExp" /> +
                 <input class="add" type="number" id="dropRedeemAdd" />
+                <span class="ml-3" id="dropRedeemFulfillStatus"></span>
               </td>
             </tr>
           </table>
