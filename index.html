@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tinlake Solver UI</title>
+    <meta content="" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <h3 class="text-center mt-2 mb-3">Tinlake solver playpen</h3>
+        </div>
+      </div>
+      <div class="row my-1 bb">
+        <div class="col">
+          <h6 class="">Weights</h6>
+        </div>
+      </div>
+      <div class="row my-1">
+        <div class="col">
+          <p class="text-center">TIN Invest</p>
+          <input id="tinInvestWeight" type="text" class="w-100" />
+        </div>
+        <div class="col">
+          <p class="text-center">DROP Invest</p>
+          <input id="dropInvestWeight" type="text" class="w-100" />
+        </div>
+        <div class="col">
+          <p class="text-center">TIN Redeem</p>
+          <input id="tinRedeemWeight" type="text" class="w-100" />
+        </div>
+        <div class="col">
+          <p class="text-center">DROP Redeem</p>
+          <input id="dropRedeemWeight" type="text" class="w-100" />
+        </div>
+      </div>
+
+      <div class="row mt-3 mb-1 bb">
+        <div class="col">
+          <h6>State</h6>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-3">
+          <p class="text-center">Senior Asset</p>
+          <div id="seniorAssetSlider" class="w-49 d-inline-block"></div>
+          <input class="value" type="number" id="seniorAssetValue" /> E
+          <input class="exp" type="number" id="seniorAssetExp" /> +
+          <input class="add" type="number" id="seniorAssetAdd" />
+        </div>
+        <div class="col-3">
+          <p class="text-center">Net Asset Value</p>
+          <div
+            id="netAssetValueSlider"
+            class="w-49"
+            style="display: inline-block"
+          ></div>
+          <input class="value" type="number" id="netAssetValueValue" /> E
+          <input class="exp" type="number" id="netAssetValueExp" /> +
+          <input class="add" type="number" id="netAssetValueAdd" />
+        </div>
+        <div class="col-3">
+          <p class="text-center">Reserve</p>
+          <div id="reserveSlider" class="w-49 d-inline-block"></div>
+          <input class="value" type="number" id="reserveValue" /> E
+          <input class="exp" type="number" id="reserveExp" /> +
+          <input class="add" type="number" id="reserveAdd" />
+        </div>
+        <div class="col-3">
+          <p class="text-center">Max Reserve</p>
+          <div id="maxReserveSlider" class="w-49 d-inline-block"></div>
+          <input class="value" type="number" id="maxReserveValue" /> E
+          <input class="exp" type="number" id="maxReserveExp" /> +
+          <input class="add" type="number" id="maxReserveAdd" />
+        </div>
+      </div>
+      <div class="row mb-2 mt-4">
+        <div class="col-1">
+          <p>TIN ratio</p>
+        </div>
+        <div class="col-2 text-right">
+          <input
+            id="minTinRatioValue"
+            type="number"
+            class="sliderValue"
+            data-index="0"
+            value="0.15"
+            min="0"
+            step="0.001"
+            max="1"
+          />
+        </div>
+        <div class="col my-auto">
+          <div id="tinRatioSlider"></div>
+        </div>
+        <div class="col-2">
+          <input
+            id="maxTinRatioValue"
+            type="number"
+            class="sliderValue"
+            data-index="1"
+            value="0.2"
+            min="0"
+            step="0.001"
+            max="1"
+          />
+        </div>
+      </div>
+
+      <div class="row my-1 bb">
+        <div class="col">
+          <h6>Orders</h6>
+        </div>
+      </div>
+      <div class="row my-1" id="ordersRow">
+        <div class="col-6">
+          <p class="text-center">TIN Invest</p>
+          <table class="w-100">
+            <tr>
+              <td class="w-50">
+                <div id="tinInvestSlider" class="mt-1 mb-2 w-100"></div>
+                <div id="tinInvestSliderOut" class="my-1 w-100"></div>
+              </td>
+              <td class="w-50">
+                <input class="value" type="number" id="tinInvestValue" /> E
+                <input class="exp" type="number" id="tinInvestExp" /> +
+                <input class="add" type="number" id="tinInvestAdd" />
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-6">
+          <p class="text-center">DROP Invest</p>
+          <table class="w-100">
+            <tr>
+              <td class="w-49">
+                <div id="dropInvestSlider" class="mt-1 mb-2 w-100"></div>
+                <div id="dropInvestSliderOut" class="my-1 w-100"></div>
+              </td>
+              <td class="w-49">
+                <input class="value" type="number" id="dropInvestValue" /> E
+                <input class="exp" type="number" id="dropInvestExp" /> +
+                <input class="add" type="number" id="dropInvestAdd" />
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-6">
+          <p class="text-center">TIN Redeem</p>
+          <table class="w-100">
+            <tr>
+              <td class="w-50">
+                <div id="tinRedeemSlider" class="mt-1 mb-2 w-100"></div>
+                <div id="tinRedeemSliderOut" class="my-1 w-100"></div>
+              </td>
+              <td class="w-50">
+                <input class="value" type="number" id="tinRedeemValue" /> E
+                <input class="exp" type="number" id="tinRedeemExp" /> +
+                <input class="add" type="number" id="tinRedeemAdd" />
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-6">
+          <p class="text-center">DROP Redeem</p>
+          <table class="w-100">
+            <tr>
+              <td class="w-49">
+                <div id="dropRedeemSlider" class="mt-1 mb-2 w-100"></div>
+                <div id="dropRedeemSliderOut" class="my-1 w-100"></div>
+              </td>
+              <td class="w-49">
+                <input class="value" type="number" id="dropRedeemValue" /> E
+                <input class="exp" type="number" id="dropRedeemExp" /> +
+                <input class="add" type="number" id="dropRedeemAdd" />
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="btn btn-primary m-2" id="import-btn">
+            Import Test Case
+          </div>
+          <div class="btn btn-primary m-2" id="export-btn">
+            Export Test Case
+          </div>
+        </div>
+      </div>
+      <div class="row h-25 mt-3">
+        <div class="col">
+          <h5>Problem in LP format</h5>
+          <textarea id="lpProblem" rows="10"></textarea>
+        </div>
+      </div>
+      <div class="row h-25">
+        <div class="col">
+          <h5>Solution</h5>
+          <textarea id="solution" rows="14"></textarea>
+        </div>
+      </div>
+    </div>
+  <script src="bundle.js"></script></body>
+</html>
