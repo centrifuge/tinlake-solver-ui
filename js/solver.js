@@ -176,9 +176,14 @@ function getFloatParameter(name) {
 }
 
 function getBNParameter(name) {
+    const value = $(`#${name}Value`).val();
+    const base =  $(`#${name}Exp`).val();
+    if (base == '0') {
+        return value;
+    }
     const number = {
-        value: parseFloat($(`#${name}Value`).val()),
-        base: parseFloat($(`#${name}Exp`).val()),
+        value: value,
+        base: base,
     };
     const add = parseFloat($(`#${name}Add`).val());
     if (add !== 0) number["add"] = add;
@@ -344,13 +349,27 @@ function setUpUi(testCase) {
         });
     }
 
-    const minTinRatio = state.minTinRatio.value;
-    const maxTinRatio = state.maxTinRatio.value;
+    function getRatio(ratio) {
+        if (typeof ratio === "string") {
+            const rbn = new BN(ratio);
+            const scaleDigits = 5;
+            const scale = new BN(1).mul(new BN(10).pow(new BN(_27 - scaleDigits)))
+            const ratio0_1 = rbn.div(scale).toNumber() / Math.pow(10, scaleDigits);
+            return ratio0_1;
+        }
+        else if ('value' in ratio) {
+            return ratio.value;
+        }
+        alert("Can't process ratio value");
+    }
+
+    const minTinRatio = getRatio(state.minTinRatio);
+    const maxTinRatio = getRatio(state.maxTinRatio);
     $("#tinRatioSlider").slider({
         range: true,
         min: 0,
         max: 1,
-        step: 0.001,
+        step: 0.01,
         values: [minTinRatio, maxTinRatio],
         slide: function (event, ui) {
             for (var i = 0; i < ui.values.length; ++i) {
@@ -372,35 +391,45 @@ function setUpUi(testCase) {
     });
 
     function setBigNumberParameter(name, parm) {
+
         const sliderSel = `#${name}Slider`;
         const inputSel = `#${name}Value`;
-        $(sliderSel).slider({
-            min: 0,
-            max: parm.max || parm.value * 2 || 100,
-            step: 1,
-            values: [parm.value],
-            slide: function (_, ui) {
-                for (var i = 0; i < ui.values.length; ++i) {
-                    $(inputSel).val(ui.values[i]);
-                }
-                buildProblem();
-            },
-        });
-        $(inputSel)
-            .attr({ max: parm.max, min: 0, value: parm.value })
-            .change(function () {
-                var $this = $(this);
-                $(sliderSel).slider("values", 0, $this.val());
-                buildProblem();
-            });
         const expSel = `#${name}Exp`;
         const addSel = `#${name}Add`;
-        $(expSel)
-            .attr({ value: parm.base || 18 })
-            .change(() => buildProblem());
-        $(addSel)
-            .attr({ value: parm.add || 0 })
-            .change(() => buildProblem());
+        if (typeof parm === "string") {
+            $(sliderSel).css('display', 'none');
+            $(inputSel).attr({'type': "text", 'value': parm}).css('width', '230px');
+            $(expSel).attr({value: 0});
+            $(addSel).attr({value: 0});
+        }
+        else {
+            $(sliderSel).css('display', 'inline-block').slider({
+                min: 0,
+                max: parm.max || parm.value * 2 || 100,
+                step: 1,
+                values: [parm.value],
+                slide: function (_, ui) {
+                    for (var i = 0; i < ui.values.length; ++i) {
+                        $(inputSel).val(ui.values[i]);
+                    }
+                    buildProblem();
+                },
+            });
+            $(inputSel)
+                .attr({ min: 0, value: parm.value })
+                .change(function () {
+                    var $this = $(this);
+                    $(sliderSel).slider("values", 0, $this.val());
+                    buildProblem();
+                });
+
+            $(expSel)
+                .attr({ value: parm.base })
+                .change(() => buildProblem());
+            $(addSel)
+                .attr({ value: parm.add || 0 })
+                .change(() => buildProblem());
+        }
     }
 
     const parmList = [
@@ -437,7 +466,7 @@ $(async () => {
         }
     });
    
-    await loadTestCase();
+    await loadTestCase('excel-dennis.json');
     setTimeout(buildProblem(), 100);
     $('#import-btn').click(() => importTestCase());
     $('#export-btn').click(() => exportTestCase());
