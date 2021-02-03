@@ -1,5 +1,7 @@
 const BN = require('bn.js')
 
+_27 = 27;
+
 'use strict';
 const nameValToStr = (name, coef, first) => {
     const ONE = new BN(1)
@@ -37,7 +39,7 @@ const linearExpression = (coefs) => {
 
 const calculateOptimalSolution = (state, orders, weights) => {
     return require('clp-wasm/clp-wasm.all').then((clp) => {
-        const e27 = new BN(1).mul(new BN(10).pow(new BN(27)))
+        const e27 = new BN(1).mul(new BN(10).pow(new BN(_27)))
         const maxTinRatio = e27.sub(state.minDropRatio)
         const minTinRatio = e27.sub(state.maxDropRatio)
 
@@ -91,12 +93,12 @@ End
             }
             return res
         }
-//         const debugConstraints = `
-// reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
-// maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
-// minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
-// maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
-        // console.log(debugConstraints)
+        const debugConstraints = `
+reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
+maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
+minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
+maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
+        console.log(debugConstraints)
 
         const isFeasible = output.infeasibilityRay.length == 0 && output.integerSolution
         if (!isFeasible) {
@@ -222,11 +224,11 @@ function prepareProblem() {
             maxReserve: getBNParameter("maxReserve"),
             minTinRatio: {
                 value: getFloatParameter("minTinRatioValue"),
-                base: 27,
+                base: _27,
             },
             maxTinRatio: {
                 value: getFloatParameter("maxTinRatioValue"),
-                base: 27,
+                base: _27,
             },
         },
         orders: {
@@ -239,10 +241,8 @@ function prepareProblem() {
 }
 
 function buildProblem() {
-    
-        const testCase = prepareProblem();
-        solveProblem(testCase);
-  
+    const testCase = prepareProblem();
+    solveProblem(testCase);
 }
 
 function exportTestCase() {
@@ -344,8 +344,8 @@ function setUpUi(testCase) {
         });
     }
 
-    const minTinRatio = state.minTinRatio.value || 0.15;
-    const maxTinRatio = state.maxTinRatio.value || 0.2;
+    const minTinRatio = state.minTinRatio.value;
+    const maxTinRatio = state.maxTinRatio.value;
     $("#tinRatioSlider").slider({
         range: true,
         min: 0,
@@ -359,6 +359,8 @@ function setUpUi(testCase) {
             buildProblem();
         },
     });
+    $(minTinRatioValue).val(minTinRatio);
+    $(maxTinRatioValue).val(maxTinRatio);
     $("input.sliderValue").change(function () {
         var $this = $(this);
         $("#tinRatioSlider").slider(
