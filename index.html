@@ -11,6 +11,19 @@
           <h3 class="text-center mt-2 mb-3">Tinlake solver playpen</h3>
         </div>
       </div>
+      <div class="row my-2">
+        <div class="col-3">
+          <h6 class="">Test Case</h6>
+        </div>
+        <div class="col">
+          <select name="testCase" id="testCase">
+            <option>broken-twice.json</option>
+            <option>getting-better.json</option>
+            <option selected="selected">tinlake.test.json</option>
+          </select>
+        </div>
+      </div>
+
       <div class="row my-1 bb">
         <div class="col">
           <h6 class="">Weights</h6>
@@ -144,6 +157,7 @@
               <td class="w-50">
                 <div id="tinInvestSlider" class="mt-1 mb-2 w-100"></div>
                 <div id="tinInvestSliderOut" class="my-1 w-100"></div>
+                <div id="tinInvestFulfilled"></div>
               </td>
               <td class="w-50 pl-2">
                 <input class="value" type="number" id="tinInvestValue" /> E
@@ -161,6 +175,7 @@
               <td class="w-50">
                 <div id="dropInvestSlider" class="mt-1 mb-2 w-100"></div>
                 <div id="dropInvestSliderOut" class="my-1 w-100"></div>
+                <div id="dropInvestFulfilled"></div>
               </td>
               <td class="w-50 pl-2">
                 <input class="value" type="number" id="dropInvestValue" /> E
@@ -178,6 +193,7 @@
               <td class="w-50">
                 <div id="tinRedeemSlider" class="mt-1 mb-2 w-100"></div>
                 <div id="tinRedeemSliderOut" class="my-1 w-100"></div>
+                <div id="tinRedeemFulfilled"></div>
               </td>
               <td class="w-50 pl-2">
                 <input class="value" type="number" id="tinRedeemValue" /> E
@@ -195,6 +211,7 @@
               <td class="w-50">
                 <div id="dropRedeemSlider" class="mt-1 mb-2 w-100"></div>
                 <div id="dropRedeemSliderOut" class="my-1 w-100"></div>
+                <div id="dropRedeemFulfilled"></div>
               </td>
               <td class="w-50 pl-2">
                 <input class="value" type="number" id="dropRedeemValue" /> E

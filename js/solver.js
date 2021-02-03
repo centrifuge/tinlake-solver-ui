@@ -162,8 +162,9 @@ const ordersList = ["tinInvest", "dropInvest", "tinRedeem", "dropRedeem"];
 
 
 
-async function loadTestCase() {
-    let req = await fetch("tinlake.test.json");
+async function loadTestCase(testCaseUrl) {
+    testCaseUrl = testCaseUrl || 'tinlake.test.json';
+    let req = await fetch(testCaseUrl);
     let testCase = await req.json();
     setUpUi(testCase);
 }
@@ -238,8 +239,10 @@ function prepareProblem() {
 }
 
 function buildProblem() {
-    const testCase = prepareProblem();
-    solveProblem(testCase);
+    
+        const testCase = prepareProblem();
+        solveProblem(testCase);
+  
 }
 
 function exportTestCase() {
@@ -300,9 +303,9 @@ async function solveProblem(testCase) {
         const str = bn.toString();
         return `${str}   (${str.length} digits)`;
     };
-    $('#newTinRatio').text(tinRatioEp1.toString())
-    $('#newReserve').text(friendlyNum(reserveEp1))
-    $('#newSeniorAsset').text(friendlyNum(seniorAssetEp1))
+    $('#newTinRatio').text(tinRatioEp1.toFixed(5));
+    $('#newReserve').text(friendlyNum(reserveEp1));
+    $('#newSeniorAsset').text(friendlyNum(seniorAssetEp1));
     const isFeasible = res.isFeasible;
     $("#ordersRow").css(
         "background-color",
@@ -320,7 +323,7 @@ async function solveProblem(testCase) {
         $(`#${order}FulfillStatus`).text((fulfilled ? "ALL" : "PARTIAL"))
             .css('color', fulfilled ? 'green' : 'red')
             .css('font-weight', 'bold');
-
+        $(`#${order}Fulfilled`).text(f.toString());
     }
 }
 
@@ -371,10 +374,10 @@ function setUpUi(testCase) {
         const inputSel = `#${name}Value`;
         $(sliderSel).slider({
             min: 0,
-            max: parm.max || parm.value * 2,
+            max: parm.max || parm.value * 2 || 100,
             step: 1,
             values: [parm.value],
-            slide: function (event, ui) {
+            slide: function (_, ui) {
                 for (var i = 0; i < ui.values.length; ++i) {
                     $(inputSel).val(ui.values[i]);
                 }
@@ -416,7 +419,7 @@ function setUpUi(testCase) {
             .slider({
                 min: 0,
                 disabled: true,
-                max: parm.max || parm.value * 2,
+                max: parm.max || parm.value * 2 || 100,
                 step: 1,
                 values: [parm.value],
             })
@@ -424,9 +427,16 @@ function setUpUi(testCase) {
     }
 }
 
-$(() => {
-    loadTestCase();
-    setTimeout(buildProblem, 100)
+$(async () => {
+    $( "#testCase").selectmenu({
+        change: async (_, data ) => {
+            await loadTestCase(data.item.value);
+            setTimeout(buildProblem(), 100);
+        }
+    });
+   
+    await loadTestCase();
+    setTimeout(buildProblem(), 100);
     $('#import-btn').click(() => importTestCase());
     $('#export-btn').click(() => exportTestCase());
 });
