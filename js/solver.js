@@ -63,28 +63,57 @@ const calculateOptimalSolution = (state, orders, weights) => {
         const minTINRatioLbCoeffs = [state.maxDropRatio, minTinRatio.neg(), state.maxDropRatio.neg(), minTinRatio]
         const maxTINRatioLbCoeffs = [state.minDropRatio.neg(), maxTinRatio, state.minDropRatio, maxTinRatio.neg()]
 
-        const lp = `Maximize
-  ${linearExpression(varWeights)}
+        const createProblem = (varWeights, orderMins, orderMaxs) => {
+            const lp = `Maximize
+  obj: ${linearExpression(varWeights)}
 Subject To
   reserve: ${linearExpression([1, 1, -1, -1])} >= ${state.reserve.neg()}
   maxReserve: ${linearExpression([1, 1, -1, -1])} <= ${state.maxReserve.sub(state.reserve)}
   minTINRatioLb: ${linearExpression(minTINRatioLbCoeffs)} >= ${minTINRatioLb}
   maxTINRatioLb: ${linearExpression(maxTINRatioLbCoeffs)} >= ${maxTINRatioLb}
 Bounds
-  0 <= tinInvest  <= ${orders.tinInvest}
-  0 <= dropInvest <= ${orders.dropInvest}
-  0 <= tinRedeem  <= ${orders.tinRedeem}
-  0 <= dropRedeem <= ${orders.dropRedeem}
-End
-      `
+  ${orderMins[0]} <= tinInvest  <= ${orderMaxs[0]}
+  ${orderMins[1]} <= dropInvest <= ${orderMaxs[1]}
+  ${orderMins[2]} <= tinRedeem  <= ${orderMaxs[2]}
+  ${orderMins[3]} <= dropRedeem <= ${orderMaxs[3]}
+End`
+          return lp;
+        };
 
-        $('#lpProblem').val(lp);
+        let isFeasible = false;
+        let solutionVector = null;
+        const linear = weights.mode != "Priority";
+        if (linear) {
+            const orderMaxs = [orders.tinInvest, orders.dropInvest, orders.tinRedeem, orders.dropRedeem];
+            const lp = createProblem(varWeights, [0, 0, 0, 0], orderMaxs);
+            $('#lpProblem').val(lp);
+            const output = clp.solve(lp, 0)
+            $('#solution').val(JSON.stringify(output, null, 4));
+            solutionVector = output.solution.map((x) => new BN(clp.bnRound(x)));
+            isFeasible |= output.infeasibilityRay.length == 0 && output.integerSolution;
+        } else {
+            const orderMins = [0, 0, 0, 0];
+            const orderMaxs = [orders.tinInvest, orders.dropInvest, orders.tinRedeem, orders.dropRedeem];
+            const priorityIndices = [0, 1, 2, 3];
+            priorityIndices.sort((a, b) => varWeights[a] > varWeights[b] ? -1 : varWeights[a] < varWeights[b] ? 1 : 0);
 
-        const output = clp.solve(lp, 0)
-
-        $('#solution').val(JSON.stringify(output, null, 4));
-
-        const solutionVector = output.solution.map((x) => new BN(clp.bnRound(x)))
+            for (const pI of priorityIndices) {
+                const weights = [1, 1, 1, 1];
+                weights[pI] = new BN('10000000000');
+                const lp = createProblem(weights, orderMins, orderMaxs);
+                $('#lpProblem').val(lp);
+                const output = clp.solve(lp, 0);
+                $('#solution').val(JSON.stringify(output, null, 4));
+                isFeasible |= output.infeasibilityRay.length == 0 && output.integerSolution;
+                if (!isFeasible)
+                    break;
+                const oP = new BN(clp.bnRound(output.solution[pI]));
+                orderMins[pI] = oP;
+                orderMaxs[pI] = oP;
+            }
+            solutionVector = orderMaxs;
+        }
+        
         const linearEval = (coefs, vars) => {
             let res = new BN(0)
             if (vars.length != 4 || coefs.length != 4) throw new Error('Invalid sequences here')
@@ -93,14 +122,13 @@ End
             }
             return res
         }
-        const debugConstraints = `
-reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
-maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
-minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
-maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
-        console.log(debugConstraints)
+//         const debugConstraints = `
+// reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
+// maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
+// minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
+// maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
+//         console.log(debugConstraints)
 
-        const isFeasible = output.infeasibilityRay.length == 0 && output.integerSolution
         if (!isFeasible) {
             // If it's not possible to go into a healthy state, calculate the best possible solution to break the constraints less
             const currentSeniorRatio = state.seniorAsset.mul(e27).div(state.netAssetValue.add(state.reserve))
@@ -221,6 +249,7 @@ function prepareProblem() {
             dropInvest: getWeight("dropInvestWeight"),
             tinRedeem: getWeight("tinRedeemWeight"),
             dropRedeem: getWeight("dropRedeemWeight"),
+            mode: $('#weightMode').val()
         },
         state: {
             seniorAsset: getBNParameter("seniorAsset"),
@@ -465,8 +494,13 @@ $(async () => {
             setTimeout(buildProblem(), 100);
         }
     });
+    $( "#weightMode").selectmenu({
+        change: (_, data ) => {
+            setTimeout(buildProblem(), 100);
+        }
+    });
    
-    await loadTestCase('excel-dennis.json');
+    await loadTestCase($("#testCase").val());
     setTimeout(buildProblem(), 100);
     $('#import-btn').click(() => importTestCase());
     $('#export-btn').click(() => exportTestCase());
