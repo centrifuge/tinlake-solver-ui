@@ -83,6 +83,7 @@ End`
         let isFeasible = false;
         let solutionVector = null;
         const linear = weights.mode != "Priority";
+        const priorityWeight = weights.priorityWeight || new BN('10000000000');
         if (linear) {
             const orderMaxs = [orders.tinInvest, orders.dropInvest, orders.tinRedeem, orders.dropRedeem];
             const lp = createProblem(varWeights, [0, 0, 0, 0], orderMaxs);
@@ -99,7 +100,7 @@ End`
 
             for (const pI of priorityIndices) {
                 const weights = [1, 1, 1, 1];
-                weights[pI] = new BN('10000000000');
+                weights[pI] = priorityWeight;
                 const lp = createProblem(weights, orderMins, orderMaxs);
                 $('#lpProblem').val(lp);
                 const output = clp.solve(lp, 0);
@@ -190,8 +191,6 @@ End`
 
 const ordersList = ["tinInvest", "dropInvest", "tinRedeem", "dropRedeem"];
 
-
-
 async function loadTestCase(testCaseUrl) {
     testCaseUrl = testCaseUrl || 'tinlake.test.json';
     let req = await fetch(testCaseUrl);
@@ -199,12 +198,16 @@ async function loadTestCase(testCaseUrl) {
     setUpUi(testCase);
 }
 
+function rms(str) {
+    return str.replace(/\s+/g, '')
+}
+
 function getFloatParameter(name) {
-    return parseFloat($(`#${name}`).val());
+    return parseFloat(rms($(`#${name}`).val()));
 }
 
 function getBNParameter(name) {
-    const value = $(`#${name}Value`).val();
+    const value = rms($(`#${name}Value`).val());
     const base =  $(`#${name}Exp`).val();
     if (base == '0') {
         return value;
@@ -219,7 +222,7 @@ function getBNParameter(name) {
 }
 
 function objToNum(jsonNumber) {
-    if (typeof jsonNumber == "string") {
+    if (typeof jsonNumber === "string") {
         return new BN(jsonNumber);
     }
     const add = jsonNumber.add ? jsonNumber.add : 0;
@@ -239,7 +242,7 @@ function paramsToBn(obj) {
 }
 
 function getWeight(name) {
-    return $(`#${name}`).val();
+    return rms($(`#${name}`).val());
 }
 
 function prepareProblem() {
@@ -249,7 +252,8 @@ function prepareProblem() {
             dropInvest: getWeight("dropInvestWeight"),
             tinRedeem: getWeight("tinRedeemWeight"),
             dropRedeem: getWeight("dropRedeemWeight"),
-            mode: $('#weightMode').val()
+            mode: $('#weightMode').val(),
+            priorityWeight: rms($('#priorityWeight').val())
         },
         state: {
             seniorAsset: getBNParameter("seniorAsset"),
@@ -499,6 +503,7 @@ $(async () => {
             setTimeout(buildProblem(), 100);
         }
     });
+    $('#priorityWeight').attr({value: '10 000 000 000'}).change(() => buildProblem());
    
     await loadTestCase($("#testCase").val());
     setTimeout(buildProblem(), 100);
