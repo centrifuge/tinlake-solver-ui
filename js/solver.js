@@ -77,7 +77,7 @@ Bounds
   ${orderMins[2]} <= tinRedeem  <= ${orderMaxs[2]}
   ${orderMins[3]} <= dropRedeem <= ${orderMaxs[3]}
 End`
-          return lp;
+            return lp;
         };
 
         let isFeasible = false;
@@ -114,7 +114,7 @@ End`
             }
             solutionVector = orderMaxs;
         }
-        
+
         const linearEval = (coefs, vars) => {
             let res = new BN(0)
             if (vars.length != 4 || coefs.length != 4) throw new Error('Invalid sequences here')
@@ -123,12 +123,12 @@ End`
             }
             return res
         }
-//         const debugConstraints = `
-// reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
-// maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
-// minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
-// maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
-//         console.log(debugConstraints)
+        //         const debugConstraints = `
+        // reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
+        // maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
+        // minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
+        // maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
+        //         console.log(debugConstraints)
 
         if (!isFeasible) {
             // If it's not possible to go into a healthy state, calculate the best possible solution to break the constraints less
@@ -208,7 +208,7 @@ function getFloatParameter(name) {
 
 function getBNParameter(name) {
     const value = rms($(`#${name}Value`).val());
-    const base =  $(`#${name}Exp`).val();
+    const base = $(`#${name}Exp`).val();
     if (base == '0') {
         return value;
     }
@@ -431,9 +431,9 @@ function setUpUi(testCase) {
         const addSel = `#${name}Add`;
         if (typeof parm === "string") {
             $(sliderSel).css('display', 'none');
-            $(inputSel).attr({'type': "text", 'value': parm}).css('width', '230px');
-            $(expSel).attr({value: 0});
-            $(addSel).attr({value: 0});
+            $(inputSel).attr({ 'type': "text", 'value': parm }).css('width', '230px');
+            $(expSel).attr({ value: 0 });
+            $(addSel).attr({ value: 0 });
         }
         else {
             $(sliderSel).css('display', 'inline-block').slider({
@@ -492,22 +492,51 @@ function setUpUi(testCase) {
 }
 
 $(async () => {
-    $( "#testCase").selectmenu({
-        change: async (_, data ) => {
+    $("#testCase").selectmenu({
+        change: async (_, data) => {
             await loadTestCase(data.item.value);
             setTimeout(buildProblem(), 100);
         }
     });
-    $( "#weightMode").selectmenu({
-        change: (_, data ) => {
+    $("#weightMode").selectmenu({
+        change: (_, data) => {
             setTimeout(buildProblem(), 100);
         }
     });
-    $('#priorityWeight').attr({value: '10 000 000 000'}).change(() => buildProblem());
-   
+    $('#priorityWeight').attr({ value: '10 000 000 000' }).change(() => buildProblem());
+
     await loadTestCase($("#testCase").val());
     setTimeout(buildProblem(), 100);
     $('#import-btn').click(() => importTestCase());
     $('#export-btn').click(() => exportTestCase());
+});
+
+$("body").on("keyup", (e) => {
+    var ch = String.fromCharCode(e.keyCode);
+    if (ch === "V" && e.ctrlKey && e.altKey) {
+        navigator.clipboard.readText()
+            .then(text => {
+                try {
+                    let testCase = JSON.parse(text);
+                    setUpUi(testCase);
+                    buildProblem()
+                } catch (e) {
+                    alert('Could not load test case from clipboard: ' + e.toString())
+                }
+            })
+            .catch(err => {
+                console.error('Failed to read clipboard contents: ', err);
+            });
+        return;
+    }
+    if (ch === "C" && e.ctrlKey && e.altKey) {
+        const json = prepareProblem();
+        const el = document.createElement('textarea');
+        el.value = JSON.stringify(json, null, 4);
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+    }
 });
 
