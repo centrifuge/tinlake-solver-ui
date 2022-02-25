@@ -37,155 +37,161 @@ const linearExpression = (coefs) => {
     return str
 }
 
-const calculateOptimalSolution = (state, orders, weights) => {
-    return require('clp-wasm/clp-wasm.all').then((clp) => {
-        const e27 = new BN(1).mul(new BN(10).pow(new BN(_27)))
-        const maxTinRatio = e27.sub(state.minDropRatio)
-        const minTinRatio = e27.sub(state.maxDropRatio)
+async function calculateOptimalSolution(state, orders, weights) {
+    var startTime = new Date();
+    clp = await require('clp-wasm/clp-wasm.all');
+    console.log((new Date() - startTime) + " ms");
 
-        const minTINRatioLb = state.maxDropRatio
-            .neg()
-            .mul(state.netAssetValue)
-            .sub(state.maxDropRatio.mul(state.reserve))
-            .add(state.seniorAsset.mul(e27))
+    const e27 = new BN(1).mul(new BN(10).pow(new BN(_27)))
+    const maxTinRatio = e27.sub(state.minDropRatio)
+    const minTinRatio = e27.sub(state.maxDropRatio)
 
-        const maxTINRatioLb = state.minDropRatio
-            .mul(state.netAssetValue)
-            .add(state.minDropRatio.mul(state.reserve))
-            .sub(state.seniorAsset.mul(e27))
+    const minTINRatioLb = state.maxDropRatio
+        .neg()
+        .mul(state.netAssetValue)
+        .sub(state.maxDropRatio.mul(state.reserve))
+        .add(state.seniorAsset.mul(e27))
 
-        const varWeights = [
-            parseFloat(weights.tinInvest.toString()),
-            parseFloat(weights.dropInvest.toString()),
-            parseFloat(weights.tinRedeem.toString()),
-            parseFloat(weights.dropRedeem.toString()),
-        ]
-        const minTINRatioLbCoeffs = [state.maxDropRatio, minTinRatio.neg(), state.maxDropRatio.neg(), minTinRatio]
-        const maxTINRatioLbCoeffs = [state.minDropRatio.neg(), maxTinRatio, state.minDropRatio, maxTinRatio.neg()]
+    const maxTINRatioLb = state.minDropRatio
+        .mul(state.netAssetValue)
+        .add(state.minDropRatio.mul(state.reserve))
+        .sub(state.seniorAsset.mul(e27))
 
-        const createProblem = (varWeights, orderMins, orderMaxs) => {
-            const lp = `Maximize
-  obj: ${linearExpression(varWeights)}
+    const varWeights = [
+        parseFloat(weights.tinInvest.toString()),
+        parseFloat(weights.dropInvest.toString()),
+        parseFloat(weights.tinRedeem.toString()),
+        parseFloat(weights.dropRedeem.toString()),
+    ]
+    const minTINRatioLbCoeffs = [state.maxDropRatio, minTinRatio.neg(), state.maxDropRatio.neg(), minTinRatio]
+    const maxTINRatioLbCoeffs = [state.minDropRatio.neg(), maxTinRatio, state.minDropRatio, maxTinRatio.neg()]
+
+    const createProblem = (varWeights, orderMins, orderMaxs) => {
+        const lp = `Maximize
+obj: ${linearExpression(varWeights)}
 Subject To
-  reserve: ${linearExpression([1, 1, -1, -1])} >= ${state.reserve.neg()}
-  maxReserve: ${linearExpression([1, 1, -1, -1])} <= ${state.maxReserve.sub(state.reserve)}
-  minTINRatioLb: ${linearExpression(minTINRatioLbCoeffs)} >= ${minTINRatioLb}
-  maxTINRatioLb: ${linearExpression(maxTINRatioLbCoeffs)} >= ${maxTINRatioLb}
+reserve: ${linearExpression([1, 1, -1, -1])} >= ${state.reserve.neg()}
+maxReserve: ${linearExpression([1, 1, -1, -1])} <= ${state.maxReserve.sub(state.reserve)}
+minTINRatioLb: ${linearExpression(minTINRatioLbCoeffs)} >= ${minTINRatioLb}
+maxTINRatioLb: ${linearExpression(maxTINRatioLbCoeffs)} >= ${maxTINRatioLb}
 Bounds
-  ${orderMins[0]} <= tinInvest  <= ${orderMaxs[0]}
-  ${orderMins[1]} <= dropInvest <= ${orderMaxs[1]}
-  ${orderMins[2]} <= tinRedeem  <= ${orderMaxs[2]}
-  ${orderMins[3]} <= dropRedeem <= ${orderMaxs[3]}
+${orderMins[0]} <= tinInvest  <= ${orderMaxs[0]}
+${orderMins[1]} <= dropInvest <= ${orderMaxs[1]}
+${orderMins[2]} <= tinRedeem  <= ${orderMaxs[2]}
+${orderMins[3]} <= dropRedeem <= ${orderMaxs[3]}
 End`
-            return lp;
-        };
+        return lp;
+    };
 
-        let isFeasible = false;
-        let solutionVector = null;
-        const linear = weights.mode != "Priority";
-        const priorityWeight = weights.priorityWeight || new BN('10000000000');
-        if (linear) {
-            const orderMaxs = [orders.tinInvest, orders.dropInvest, orders.tinRedeem, orders.dropRedeem];
-            const lp = createProblem(varWeights, [0, 0, 0, 0], orderMaxs);
+    let isFeasible = false;
+    let solutionVector = null;
+    const linear = weights.mode != "Priority";
+    const priorityWeight = weights.priorityWeight || new BN('10000000000');
+    if (linear) {
+        const orderMaxs = [orders.tinInvest, orders.dropInvest, orders.tinRedeem, orders.dropRedeem];
+        const lp = createProblem(varWeights, [0, 0, 0, 0], orderMaxs);
+        $('#lpProblem').val(lp);
+
+        let startTime = new Date();
+        const output = await clp.solve(lp, 0);
+        console.log((new Date() - startTime) + " ms");
+
+        $('#solution').val(JSON.stringify(output, null, 4));
+        solutionVector = await Promise.all(output.solution.map(async (x) => new BN(await clp.bnRound(x))));
+        isFeasible |= output.infeasibilityRay.length == 0 && output.integerSolution;
+    } else {
+        const orderMins = [0, 0, 0, 0];
+        const orderMaxs = [orders.tinInvest, orders.dropInvest, orders.tinRedeem, orders.dropRedeem];
+        const priorityIndices = [0, 1, 2, 3];
+        priorityIndices.sort((a, b) => varWeights[a] > varWeights[b] ? -1 : varWeights[a] < varWeights[b] ? 1 : 0);
+
+        for (const pI of priorityIndices) {
+            const weights = [1, 1, 1, 1];
+            weights[pI] = priorityWeight;
+            const lp = createProblem(weights, orderMins, orderMaxs);
             $('#lpProblem').val(lp);
-            const output = clp.solve(lp, 0)
+            const output = await clp.solve(lp, 0);
             $('#solution').val(JSON.stringify(output, null, 4));
-            solutionVector = output.solution.map((x) => new BN(clp.bnRound(x)));
             isFeasible |= output.infeasibilityRay.length == 0 && output.integerSolution;
+            if (!isFeasible)
+                break;
+            const oP = new BN(await clp.bnRound(output.solution[pI]));
+            orderMins[pI] = oP;
+            orderMaxs[pI] = oP;
+        }
+        solutionVector = orderMaxs;
+    }
+
+    const linearEval = (coefs, vars) => {
+        let res = new BN(0)
+        if (vars.length != 4 || coefs.length != 4) throw new Error('Invalid sequences here')
+        for (let i = 0; i < 4; i++) {
+            res = res.add(new BN(vars[i]).mul(new BN(coefs[i])))
+        }
+        return res
+    }
+    //         const debugConstraints = `
+    // reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
+    // maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
+    // minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
+    // maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
+    //         console.log(debugConstraints)
+
+    if (!isFeasible) {
+        // If it's not possible to go into a healthy state, calculate the best possible solution to break the constraints less
+        const currentSeniorRatio = state.seniorAsset.mul(e27).div(state.netAssetValue.add(state.reserve))
+
+        if (currentSeniorRatio.lte(state.minDropRatio)) {
+            const dropInvest = orders.dropInvest
+            const tinRedeem = BN.min(orders.tinRedeem, state.reserve.add(dropInvest))
+
+            return {
+                isFeasible: isFeasible,
+                dropInvest,
+                tinRedeem,
+                tinInvest: new BN(0),
+                dropRedeem: new BN(0),
+            }
+        } else if (currentSeniorRatio.gte(state.maxDropRatio)) {
+            const tinInvest = orders.tinInvest
+            const dropRedeem = BN.min(orders.dropRedeem, state.reserve.add(tinInvest))
+
+            return {
+                isFeasible: isFeasible,
+                tinInvest,
+                dropRedeem,
+                dropInvest: new BN(0),
+                tinRedeem: new BN(0),
+            }
+        } else if (state.reserve.gte(state.maxReserve)) {
+            const dropRedeem = BN.min(orders.dropRedeem, state.reserve) // Limited either by the order or the reserve
+            const tinRedeem = BN.min(orders.tinRedeem, state.reserve.sub(dropRedeem)) // Limited either by the order or what's remaining of the reserve after the DROP redemptions
+
+            return {
+                isFeasible: isFeasible,
+                tinRedeem,
+                dropRedeem,
+                dropInvest: new BN(0),
+                tinInvest: new BN(0),
+            }
         } else {
-            const orderMins = [0, 0, 0, 0];
-            const orderMaxs = [orders.tinInvest, orders.dropInvest, orders.tinRedeem, orders.dropRedeem];
-            const priorityIndices = [0, 1, 2, 3];
-            priorityIndices.sort((a, b) => varWeights[a] > varWeights[b] ? -1 : varWeights[a] < varWeights[b] ? 1 : 0);
-
-            for (const pI of priorityIndices) {
-                const weights = [1, 1, 1, 1];
-                weights[pI] = priorityWeight;
-                const lp = createProblem(weights, orderMins, orderMaxs);
-                $('#lpProblem').val(lp);
-                const output = clp.solve(lp, 0);
-                $('#solution').val(JSON.stringify(output, null, 4));
-                isFeasible |= output.infeasibilityRay.length == 0 && output.integerSolution;
-                if (!isFeasible)
-                    break;
-                const oP = new BN(clp.bnRound(output.solution[pI]));
-                orderMins[pI] = oP;
-                orderMaxs[pI] = oP;
-            }
-            solutionVector = orderMaxs;
-        }
-
-        const linearEval = (coefs, vars) => {
-            let res = new BN(0)
-            if (vars.length != 4 || coefs.length != 4) throw new Error('Invalid sequences here')
-            for (let i = 0; i < 4; i++) {
-                res = res.add(new BN(vars[i]).mul(new BN(coefs[i])))
-            }
-            return res
-        }
-        //         const debugConstraints = `
-        // reserve: ${linearEval([1, 1, -1, -1], solutionVector)} >= ${state.reserve.neg()}
-        // maxReserve: ${linearEval([1, 1, -1, -1], solutionVector)} <= ${state.maxReserve.sub(state.reserve)}
-        // minTINRatioLb: ${linearEval(minTINRatioLbCoeffs, solutionVector)} >= ${minTINRatioLb}
-        // maxTINRatioLb: ${linearEval(maxTINRatioLbCoeffs, solutionVector)} >= ${maxTINRatioLb}`
-        //         console.log(debugConstraints)
-
-        if (!isFeasible) {
-            // If it's not possible to go into a healthy state, calculate the best possible solution to break the constraints less
-            const currentSeniorRatio = state.seniorAsset.mul(e27).div(state.netAssetValue.add(state.reserve))
-
-            if (currentSeniorRatio.lte(state.minDropRatio)) {
-                const dropInvest = orders.dropInvest
-                const tinRedeem = BN.min(orders.tinRedeem, state.reserve.add(dropInvest))
-
-                return {
-                    isFeasible: isFeasible,
-                    dropInvest,
-                    tinRedeem,
-                    tinInvest: new BN(0),
-                    dropRedeem: new BN(0),
-                }
-            } else if (currentSeniorRatio.gte(state.maxDropRatio)) {
-                const tinInvest = orders.tinInvest
-                const dropRedeem = BN.min(orders.dropRedeem, state.reserve.add(tinInvest))
-
-                return {
-                    isFeasible: isFeasible,
-                    tinInvest,
-                    dropRedeem,
-                    dropInvest: new BN(0),
-                    tinRedeem: new BN(0),
-                }
-            } else if (state.reserve.gte(state.maxReserve)) {
-                const dropRedeem = BN.min(orders.dropRedeem, state.reserve) // Limited either by the order or the reserve
-                const tinRedeem = BN.min(orders.tinRedeem, state.reserve.sub(dropRedeem)) // Limited either by the order or what's remaining of the reserve after the DROP redemptions
-
-                return {
-                    isFeasible: isFeasible,
-                    tinRedeem,
-                    dropRedeem,
-                    dropInvest: new BN(0),
-                    tinInvest: new BN(0),
-                }
-            } else {
-                return {
-                    isFeasible: false,
-                    dropInvest: new BN(0),
-                    dropRedeem: new BN(0),
-                    tinInvest: new BN(0),
-                    tinRedeem: new BN(0),
-                }
+            return {
+                isFeasible: false,
+                dropInvest: new BN(0),
+                dropRedeem: new BN(0),
+                tinInvest: new BN(0),
+                tinRedeem: new BN(0),
             }
         }
+    }
 
-        return {
-            isFeasible,
-            dropInvest: solutionVector[1],
-            dropRedeem: solutionVector[3],
-            tinInvest: solutionVector[0],
-            tinRedeem: solutionVector[2],
-        }
-    })
+    return {
+        isFeasible,
+        dropInvest: solutionVector[1],
+        dropRedeem: solutionVector[3],
+        tinInvest: solutionVector[0],
+        tinRedeem: solutionVector[2],
+    }
 };
 
 
